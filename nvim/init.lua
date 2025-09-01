@@ -3,19 +3,21 @@ vim.pack.add {
     { src = "https://github.com/mason-org/mason.nvim", },
     { src = "https://github.com/catppuccin/nvim",      name = "catppuccin" },
     "https://github.com/stevearc/oil.nvim",
-    "https://github.com/nvim-mini/mini.pick",
     "https://github.com/vague2k/vague.nvim",
     "https://github.com/hrsh7th/nvim-cmp",
     "https://github.com/L3MON4D3/LuaSnip",
     "https://github.com/hrsh7th/cmp-nvim-lsp",
     "https://github.com/onsails/lspkind.nvim",
     "https://github.com/ray-x/lsp_signature.nvim",
-    "https://github.com/folke/which-key.nvim"
+    "https://github.com/folke/which-key.nvim",
+
+    "https://github.com/nvim-lua/plenary.nvim",
+    "https://github.com/nvim-telescope/telescope.nvim"
 }
 
 require("mason").setup()
 require("oil").setup()
-require("mini.pick").setup()
+-- require("mini.pick").setup()
 require("lspkind").init {}
 require "lsp_signature".setup {
     floating_window_above_cur_line = true
