@@ -84,6 +84,12 @@ vim.keymap.set("n", "<leader>ff", ':Pick files<CR>', { desc = "Pick files" })
 vim.keymap.set("n", "<leader>mt", file_maketerminal, { desc = "Make terminal" })
 vim.keymap.set("n", "<leader>mr", file_makerun, { desc = "Run current file" })
 vim.keymap.set("n", "<leader>mc", file_clear, { desc = "Clear temporary executable files" })
+
+-- in your nvim/lua config
+vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Go to definition" })
+vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { desc = "Go to declaration" })
+vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { desc = "Go to implementation" })
+vim.keymap.set("n", "gr", vim.lsp.buf.references, { desc = "Find references" })
 vim.keymap.set("n", "<leader>d", function()
     vim.diagnostic.open_float(nil, {
         focus = false,       -- don't move cursor into the float
