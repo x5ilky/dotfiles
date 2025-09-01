@@ -75,15 +75,15 @@ function file_maketerminal()
     vim.cmd "vertical resize 60"
 end
 
-vim.keymap.set("n", "<leader>o", ":update<CR> :source<CR>", { desc = "Resource Config" })
-vim.keymap.set("n", "<leader>e", ":Oil<CR>", { desc = "Open explorer" })
-vim.keymap.set("n", "<leader>y", '\"+y', { desc = "Yank from clipboard" })
-vim.keymap.set("n", "<leader>p", '\"+p', { desc = "Paste from clipboard" })
-vim.keymap.set("n", "<leader>lf", vim.lsp.buf.format, { desc = "Format file" })
-vim.keymap.set("n", "<leader>ff", ':Pick files<CR>', { desc = "Pick files" })
-vim.keymap.set("n", "<leader>mt", file_maketerminal, { desc = "Make terminal" })
-vim.keymap.set("n", "<leader>mr", file_makerun, { desc = "Run current file" })
-vim.keymap.set("n", "<leader>mc", file_clear, { desc = "Clear temporary executable files" })
+vim.keymap.set({ "n", "v" }, "<leader>o", ":update<CR> :source<CR>", { desc = "Resource Config" })
+vim.keymap.set({ "n", "v" }, "<leader>e", ":Oil<CR>", { desc = "Open explorer" })
+vim.keymap.set({ "n", "v" }, "<leader>y", '\"+y', { desc = "Yank from clipboard" })
+vim.keymap.set({ "n", "v" }, "<leader>p", '\"+p', { desc = "Paste from clipboard" })
+vim.keymap.set({ "n", "v" }, "<leader>lf", vim.lsp.buf.format, { desc = "Format file" })
+vim.keymap.set({ "n", "v" }, "<leader>ff", ':Pick files<CR>', { desc = "Pick files" })
+vim.keymap.set({ "n", "v" }, "<leader>mt", file_maketerminal, { desc = "Make terminal" })
+vim.keymap.set({ "n", "v" }, "<leader>mr", file_makerun, { desc = "Run current file" })
+vim.keymap.set({ "n", "v" }, "<leader>mc", file_clear, { desc = "Clear temporary executable files" })
 
 -- in your nvim/lua config
 vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Go to definition" })
