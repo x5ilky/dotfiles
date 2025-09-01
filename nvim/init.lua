@@ -50,17 +50,18 @@ if in_wsl then
 end
 
 
-function file_makerun()
+local function file_makerun()
     local ft = vim.bo.filetype
     local filename = vim.fn.expand("%:t")
     local dir = vim.fn.expand("%:p:h")
     if ft == "cpp" then
-        vim.cmd(string.format("vnew | terminal cd %s && g++ -Wall -Wextra -o %s.sto %s && ./%s.sto", dir, filename, filename, filename))
+        vim.cmd(string.format("vnew | terminal cd %s && g++ -Wall -Wextra -o %s.sto %s && ./%s.sto", dir, filename,
+            filename, filename))
         vim.cmd "wincmd l"
         vim.cmd "wincmd h"
     end
 end
-function file_clear()
+local function file_clear()
     local ft = vim.bo.filetype
     local dir = vim.fn.expand("%:p:h")
     if ft == "cpp" then
@@ -69,7 +70,7 @@ function file_clear()
         vim.cmd "wincmd h"
     end
 end
-function file_maketerminal()
+local function file_maketerminal()
     local dir = vim.fn.expand("%:p:h")
     vim.cmd(string.format("vnew | terminal cd %s && zsh", dir))
     vim.cmd "wincmd r"
@@ -82,31 +83,40 @@ vim.keymap.set({ "n", "v" }, "<leader>e", ":Oil<CR>", { desc = "Open explorer" }
 vim.keymap.set({ "n", "v" }, "<leader>y", '\"+y', { desc = "Yank from clipboard" })
 vim.keymap.set({ "n", "v" }, "<leader>p", '\"+p', { desc = "Paste from clipboard" })
 vim.keymap.set({ "n", "v" }, "<leader>lf", vim.lsp.buf.format, { desc = "Format file" })
-vim.keymap.set({ "n", "v" }, "<leader>ff", ':Pick files<CR>', { desc = "Pick files" })
 vim.keymap.set({ "n", "v" }, "<leader>mt", file_maketerminal, { desc = "Make terminal" })
 vim.keymap.set({ "n", "v" }, "<leader>mr", file_makerun, { desc = "Run current file" })
 vim.keymap.set({ "n", "v" }, "<leader>mc", file_clear, { desc = "Clear temporary executable files" })
 
--- in your nvim/lua config
-vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Go to definition" })
+
+local tb = require "telescope.builtin"
+vim.keymap.set("n", "<leader>ff", tb.find_files, { desc = "Find files" })
+vim.keymap.set("n", "<leader>fg", tb.live_grep, { desc = "Live grep" })
+vim.keymap.set("n", "<leader>fb", tb.buffers, { desc = "Change buffer" })
+vim.keymap.set("n", "<leader>fh", tb.help_tags, { desc = "Help tags" })
+
+vim.keymap.set("n", "gd", tb.lsp_definitions, { desc = "Go to definition" })
+vim.keymap.set("n", "gs", tb.lsp_document_symbols, { desc = "Go to document symbol" })
+vim.keymap.set("n", "gS", tb.lsp_workspace_symbols, { desc = "Go to workspace symbol" })
 vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { desc = "Go to declaration" })
-vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { desc = "Go to implementation" })
-vim.keymap.set("n", "gr", vim.lsp.buf.references, { desc = "Find references" })
+vim.keymap.set("n", "ge", tb.diagnostics, { desc = "Go to diagnostics" })
+vim.keymap.set("n", "gi", tb.lsp_implementations, { desc = "Go to implementation" })
+vim.keymap.set("n", "gr", tb.lsp_references, { desc = "Find references" })
 vim.keymap.set("n", "<leader>d", function()
     vim.diagnostic.open_float(nil, {
-        focus = false,       -- don't move cursor into the float
-        scope = "cursor",    -- show diagnostics under cursor
-        border = "rounded",  -- optional rounded border
+        focus = false,      -- don't move cursor into the float
+        scope = "cursor",   -- show diagnostics under cursor
+        border = "rounded", -- optional rounded border
     })
 end, { desc = "Show diagnostic" })
 
 function add_whichkey_groups()
     local wk = require "which-key"
     wk.add {
-        { "<leader>f", group = "file" },
+        { "<leader>f", group = "find" },
         { "<leader>m", group = "make" },
     }
 end
+
 add_whichkey_groups()
 
 function setup_cmp()
@@ -174,6 +184,25 @@ function setup_cmp()
             ['<C-Space>'] = cmp.mapping.complete(),
             ['<C-e>'] = cmp.mapping.abort(),
             ['<CR>'] = cmp.mapping.confirm({ select = true }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+            ["<Tab>"] = cmp.mapping(function(fallback)
+                if cmp.visible() then
+                    cmp.select_next_item()
+                elseif require("luasnip").expand_or_jumpable() then
+                    require("luasnip").expand_or_jump()
+                else
+                    fallback()
+                end
+            end, { "i", "s" }),
+
+            ["<S-Tab>"] = cmp.mapping(function(fallback)
+                if cmp.visible() then
+                    cmp.select_prev_item()
+                elseif require("luasnip").jumpable(-1) then
+                    require("luasnip").jump(-1)
+                else
+                    fallback()
+                end
+            end, { "i", "s" }),
         }),
         sources = cmp.config.sources({
             { name = 'nvim_lsp' },
@@ -198,7 +227,18 @@ function setup_cmp()
     })
     local capabilities = require('cmp_nvim_lsp').default_capabilities()
     require('lspconfig')['lua_ls'].setup {
-        capabilities = capabilities
+        capabilities = capabilities,
+        settings = {
+            Lua = {
+                diagnostics = {
+                    globals = { "vim" },
+                },
+                workspace = {
+                    library = vim.api.nvim_get_runtime_file("", true),
+                    checkThirdParty = false
+                }
+            }
+        }
     }
     require('lspconfig')['clangd'].setup {
         capabilities = capabilities
