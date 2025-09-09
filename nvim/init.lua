@@ -226,6 +226,7 @@ function setup_cmp()
         },
     })
     local capabilities = require('cmp_nvim_lsp').default_capabilities()
+    local lspconfig = require 'lspconfig'
     require('lspconfig')['lua_ls'].setup {
         capabilities = capabilities,
         settings = {
@@ -242,6 +243,15 @@ function setup_cmp()
     }
     require('lspconfig')['clangd'].setup {
         capabilities = capabilities
+    }
+    require('lspconfig')['ts_ls'].setup {
+        capabilities = capabilities,
+        root_dir = lspconfig.util.root_pattern("package.json"),
+        single_file_support = false
+    }
+    require('lspconfig')['denols'].setup {
+        capabilities = capabilities,
+        root_dir = lspconfig.util.root_pattern("deno.json", "deno.jsonc"),
     }
 end
 
