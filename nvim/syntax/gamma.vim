@@ -6,7 +6,7 @@ endif
 syn keyword gammaKeyword if else while for return break continue module import struct type as c_call sizeof defer
 syn region gammaString start=/"/ skip=/\\"/ end=/"/
 syn match gammaNumber /\v\d+/
-syn match gammaSymbol /[+\-*\/%&!~\^=]/
+syn match gammaSymbol /\v[\+\-\*\/%&!~\^=<>]+/
 syn match gammaComment /\/\/.*/
 syn match gammaIdentifier /\<[A-Za-z_][A-Za-z0-9_?]*\>/
 syn keyword gammaType void bool char str i8 i16 i32 i64 u8 u16 u32 u64 f32 f64 
