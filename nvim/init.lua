@@ -1,7 +1,7 @@
 vim.pack.add {
     { src = 'https://github.com/neovim/nvim-lspconfig' },
     { src = "https://github.com/mason-org/mason.nvim", },
-    { src = "https://github.com/catppuccin/nvim",      name = "catppuccin" },
+    { src = "https://github.com/catppuccin/nvim", name = "catppuccin" },
     "https://github.com/stevearc/oil.nvim",
     "https://github.com/vague2k/vague.nvim",
     "https://github.com/hrsh7th/nvim-cmp",
@@ -10,9 +10,9 @@ vim.pack.add {
     "https://github.com/onsails/lspkind.nvim",
     "https://github.com/ray-x/lsp_signature.nvim",
     "https://github.com/folke/which-key.nvim",
-
     "https://github.com/nvim-lua/plenary.nvim",
-    "https://github.com/nvim-telescope/telescope.nvim"
+    "https://github.com/nvim-telescope/telescope.nvim",
+    { src = "https://github.com/nvim-treesitter/nvim-treesitter", branch = "master" }
 }
 
 require("mason").setup()
@@ -21,6 +21,15 @@ require("oil").setup()
 require("lspkind").init {}
 require "lsp_signature".setup {
     floating_window_above_cur_line = true
+}
+require'nvim-treesitter.configs'.setup {
+  ensure_installed = { "c", "lua", "vim", "vimdoc", "query", "markdown", "markdown_inline" },
+  sync_install = false,
+  auto_install = true,
+  highlight = {
+    enable = true,
+  },
+  ignore_install = {},
 }
 
 vim.o.termguicolors = true
@@ -110,6 +119,22 @@ vim.keymap.set("n", "<leader>d", function()
         border = "rounded", -- optional rounded border
     })
 end, { desc = "Show diagnostic" })
+
+--- @param str string
+local function type(str)
+    return "a" .. str:gsub("\n", "<CR>")
+end
+vim.keymap.set("n", "gct", type([[
+#include <bits/stdc++.h>
+
+using namespace std;
+
+signed main() {
+
+
+    return 0;
+}
+]]))
 
 function add_whichkey_groups()
     local wk = require "which-key"
