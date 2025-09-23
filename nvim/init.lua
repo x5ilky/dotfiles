@@ -101,9 +101,9 @@ vim.keymap.set("n", "gS", tb.lsp_workspace_symbols, { desc = "Go to workspace sy
 vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { desc = "Go to declaration" })
 vim.keymap.set("n", "ge", tb.diagnostics, { desc = "Go to diagnostics" })
 vim.keymap.set("n", "gi", tb.lsp_implementations, { desc = "Go to implementation" })
-vim.keymap.set("n", "gr", tb.lsp_references, { desc = "Find references" })
 vim.keymap.set("n", "<leader>T", tb.lsp_document_symbols, { desc = "Go to document symbols" })
 vim.keymap.set("n", "<leader>gT", tb.lsp_workspace_symbols, { desc = "Go to workspace symbols" })
+vim.keymap.set("n", "gR", tb.lsp_references, { desc = "Find references" })
 vim.keymap.set("n", "<leader>d", function()
     vim.diagnostic.open_float(nil, {
         focus = false,      -- don't move cursor into the float
@@ -255,6 +255,9 @@ function setup_cmp()
     require('lspconfig')['denols'].setup {
         capabilities = capabilities,
         root_dir = lspconfig.util.root_pattern("deno.json", "deno.jsonc"),
+    }
+    require('lspconfig')['svelte'].setup {
+        capabilities = capabilities,
     }
 end
 
