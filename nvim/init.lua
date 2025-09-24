@@ -255,7 +255,7 @@ function setup_cmp()
     })
     local capabilities = require('cmp_nvim_lsp').default_capabilities()
     local lspconfig = require 'lspconfig'
-    require('lspconfig')['lua_ls'].setup {
+    vim.lsp.config['lua_ls'] = {
         capabilities = capabilities,
         settings = {
             Lua = {
@@ -269,19 +269,19 @@ function setup_cmp()
             }
         }
     }
-    require('lspconfig')['clangd'].setup {
+    vim.lsp.config['clangd'] = {
         capabilities = capabilities
     }
-    require('lspconfig')['ts_ls'].setup {
+    vim.lsp.config['ts_ls'] = {
         capabilities = capabilities,
         root_dir = lspconfig.util.root_pattern("package.json"),
         single_file_support = false
     }
-    require('lspconfig')['denols'].setup {
+    vim.lsp.config['denols'] = {
         capabilities = capabilities,
         root_dir = lspconfig.util.root_pattern("deno.json", "deno.jsonc"),
     }
-    require('lspconfig')['svelte'].setup {
+    vim.lsp.config['svelte'] = {
         capabilities = capabilities,
     }
 end
