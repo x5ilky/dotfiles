@@ -12,7 +12,9 @@ vim.pack.add {
     "https://github.com/folke/which-key.nvim",
     "https://github.com/nvim-lua/plenary.nvim",
     "https://github.com/nvim-telescope/telescope.nvim",
-    { src = "https://github.com/nvim-treesitter/nvim-treesitter", branch = "master" }
+    { src = "https://github.com/nvim-treesitter/nvim-treesitter", branch = "master" },
+    "https://github.com/nvim-lualine/lualine.nvim",
+    "https://github.com/nvim-tree/nvim-web-devicons"
 }
 
 require("mason").setup()
@@ -30,7 +32,70 @@ require'nvim-treesitter.configs'.setup {
     enable = true,
   },
   ignore_install = {},
+  modules = {}
 }
+local lualine = require 'lualine'
+lualine.setup {
+  options = {
+    icons_enabled = true,
+    theme = 'auto',
+    component_separators = { left = '', right = ''},
+    section_separators = { left = '', right = ''},
+    disabled_filetypes = {
+      statusline = {},
+      winbar = {},
+    },
+    ignore_focus = {},
+    always_divide_middle = true,
+    always_show_tabline = true,
+    globalstatus = false,
+    refresh = {
+      statusline = 1000,
+      tabline = 1000,
+      winbar = 1000,
+      refresh_time = 16, -- ~60fps
+      events = {
+        'WinEnter',
+        'BufEnter',
+        'BufWritePost',
+        'SessionLoadPost',
+        'FileChangedShellPost',
+        'VimResized',
+        'Filetype',
+        'CursorMoved',
+        'CursorMovedI',
+        'ModeChanged',
+      },
+    }
+  },
+  sections = {
+    lualine_a = {'mode'},
+    lualine_b = {'branch', 'diff', 'diagnostics'},
+    lualine_c = {'filename'},
+    lualine_x = {'fileformat'},
+    lualine_y = {'filetype'},
+    lualine_z = {'location'}
+  },
+  inactive_sections = {
+    lualine_a = {},
+    lualine_b = {},
+    lualine_c = {'filename'},
+    lualine_x = {'location'},
+    lualine_y = {},
+    lualine_z = {}
+  },
+  tabline = {},
+  winbar = {},
+  inactive_winbar = {},
+  extensions = { "oil" }
+}
+vim.keymap.set("n", "<leader>l", function ()
+    lualine.refresh {
+        scope = "tabpage",
+        
+    }
+end)
+
 require("gamma")
 
 vim.o.termguicolors = true
@@ -269,21 +334,26 @@ function setup_cmp()
             }
         }
     }
+    vim.lsp.enable 'lua_ls'
     vim.lsp.config['clangd'] = {
         capabilities = capabilities
     }
+    vim.lsp.enable 'clangd'
     vim.lsp.config['ts_ls'] = {
         capabilities = capabilities,
         root_dir = lspconfig.util.root_pattern("package.json"),
         single_file_support = false
     }
+    vim.lsp.enable 'ts_ls'
     vim.lsp.config['denols'] = {
         capabilities = capabilities,
         root_dir = lspconfig.util.root_pattern("deno.json", "deno.jsonc"),
     }
+    vim.lsp.enable 'denols'
     vim.lsp.config['svelte'] = {
         capabilities = capabilities,
     }
+    vim.lsp.enable 'svelte'
 end
 
 setup_cmp()
