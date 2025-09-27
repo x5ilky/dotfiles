@@ -1,7 +1,7 @@
 vim.pack.add {
     { src = 'https://github.com/neovim/nvim-lspconfig' },
     { src = "https://github.com/mason-org/mason.nvim", },
-    { src = "https://github.com/catppuccin/nvim", name = "catppuccin" },
+    { src = "https://github.com/catppuccin/nvim",      name = "catppuccin" },
     "https://github.com/stevearc/oil.nvim",
     "https://github.com/vague2k/vague.nvim",
     "https://github.com/hrsh7th/nvim-cmp",
@@ -24,77 +24,69 @@ require("lspkind").init {}
 require "lsp_signature".setup {
     floating_window_above_cur_line = true
 }
-require'nvim-treesitter.configs'.setup {
-  ensure_installed = { "c", "lua", "vim", "vimdoc", "query", "markdown", "markdown_inline" },
-  sync_install = false,
-  auto_install = true,
-  highlight = {
-    enable = true,
-  },
-  ignore_install = {},
-  modules = {}
+require 'nvim-treesitter.configs'.setup {
+    ensure_installed = { "c", "lua", "vim", "vimdoc", "query", "markdown", "markdown_inline" },
+    sync_install = false,
+    auto_install = true,
+    highlight = {
+        enable = true,
+    },
+    ignore_install = {},
+    modules = {}
 }
+local in_command = false
+local IC = function()
+    return not in_command
+end
+
 local lualine = require 'lualine'
 lualine.setup {
-  options = {
-    icons_enabled = true,
-    theme = 'auto',
-    component_separators = { left = '', right = ''},
-    section_separators = { left = '', right = ''},
-    disabled_filetypes = {
-      statusline = {},
-      winbar = {},
+    options = {
+        icons_enabled = true,
+        theme = 'auto',
+        component_separators = { left = '', right = '' },
+        section_separators = { left = '', right = '' },
+        disabled_filetypes = {
+            statusline = {},
+            winbar = {},
+        },
+        ignore_focus = {},
+        always_divide_middle = true,
+        always_show_tabline = true,
+        globalstatus = false,
+        refresh = {
+            statusline = 1000,
+            tabline = 1000,
+            winbar = 1000,
+            refresh_time = 16, -- ~60fps
+            events = {
+                'WinEnter',
+                'BufEnter',
+                'BufWritePost',
+                'SessionLoadPost',
+                'FileChangedShellPost',
+                'VimResized',
+                'Filetype',
+                'CursorMoved',
+                'CursorMovedI',
+                'ModeChanged',
+            },
+        }
     },
-    ignore_focus = {},
-    always_divide_middle = true,
-    always_show_tabline = true,
-    globalstatus = false,
-    refresh = {
-      statusline = 1000,
-      tabline = 1000,
-      winbar = 1000,
-      refresh_time = 16, -- ~60fps
-      events = {
-        'WinEnter',
-        'BufEnter',
-        'BufWritePost',
-        'SessionLoadPost',
-        'FileChangedShellPost',
-        'VimResized',
-        'Filetype',
-        'CursorMoved',
-        'CursorMovedI',
-        'ModeChanged',
-      },
-    }
-  },
-  sections = {
-    lualine_a = {'mode'},
-    lualine_b = {'branch', 'diff', 'diagnostics'},
-    lualine_c = {'filename'},
-    lualine_x = {'fileformat'},
-    lualine_y = {'filetype'},
-    lualine_z = {'location'}
-  },
-  inactive_sections = {
-    lualine_a = {},
-    lualine_b = {},
-    lualine_c = {'filename'},
-    lualine_x = {'location'},
-    lualine_y = {},
-    lualine_z = {}
-  },
-  tabline = {},
-  winbar = {},
-  inactive_winbar = {},
-  extensions = { "oil" }
+    sections = {
+        lualine_a = { { 'mode', cond = IC } },
+        lualine_b = { { 'branch', cond = IC }, { 'diff', cond = IC }, { 'diagnostics', cond = IC } },
+        lualine_c = { { 'filename', cond = IC }, },
+        lualine_x = { { 'fileformat', cond = IC } },
+        lualine_y = { { 'filetype', cond = IC } },
+        lualine_z = { { 'location', cond = IC } }
+    },
+    inactive_sections = {},
+    tabline = {},
+    winbar = {},
+    inactive_winbar = {},
+    extensions = { "oil" }
 }
-vim.keymap.set("n", "<leader>l", function ()
-    lualine.refresh {
-        scope = "tabpage",
-        
-    }
-end)
 
 require("gamma")
 
@@ -130,7 +122,7 @@ local function file_makerun()
     local filename = vim.fn.expand("%:t")
     local dir = vim.fn.expand("%:p:h")
     if ft == "cpp" then
-        vim.cmd(string.format("vnew | terminal cd %s && g++ -Wall -Wextra -o %s.sto %s && ./%s.sto", dir, filename,
+        vim.cmd(string.format("vnew | terminal cd \"%s\" && g++ -Wall -Wextra -o %s.sto %s && ./%s.sto", dir, filename,
             filename, filename))
         vim.cmd "wincmd l"
         vim.cmd "wincmd h"
