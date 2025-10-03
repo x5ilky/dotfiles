@@ -14,7 +14,8 @@ vim.pack.add {
     "https://github.com/nvim-telescope/telescope.nvim",
     { src = "https://github.com/nvim-treesitter/nvim-treesitter", branch = "master" },
     "https://github.com/nvim-lualine/lualine.nvim",
-    "https://github.com/nvim-tree/nvim-web-devicons"
+    "https://github.com/nvim-tree/nvim-web-devicons",
+    "https://github.com/chomosuke/typst-preview.nvim"
 }
 
 require("mason").setup()
@@ -24,6 +25,7 @@ require("lspkind").init {}
 require "lsp_signature".setup {
     floating_window_above_cur_line = true
 }
+require 'typst-preview'.setup {}
 require 'nvim-treesitter.configs'.setup {
     ensure_installed = { "c", "lua", "vim", "vimdoc", "query", "markdown", "markdown_inline" },
     sync_install = false,
@@ -331,21 +333,47 @@ function setup_cmp()
         capabilities = capabilities
     }
     vim.lsp.enable 'clangd'
-    vim.lsp.config['ts_ls'] = {
-        capabilities = capabilities,
-        root_dir = lspconfig.util.root_pattern("package.json"),
-        single_file_support = false
-    }
-    vim.lsp.enable 'ts_ls'
     vim.lsp.config['denols'] = {
         capabilities = capabilities,
-        root_dir = lspconfig.util.root_pattern("deno.json", "deno.jsonc"),
+        on_attach = function(client, bufnr)
+            if not lspconfig.util.root_pattern("deno.json", "deno.jsonc")(vim.fn.getcwd()) then
+                client:stop()
+                return
+            end
+        end
     }
     vim.lsp.enable 'denols'
+    vim.lsp.config['ts_ls'] = {
+        capabilities = capabilities,
+        single_file_support = false,
+        on_attach = function(client, bufnr)
+            if lspconfig.util.root_pattern("deno.json", "deno.jsonc")(vim.fn.getcwd()) then
+                client:stop()
+                return
+            end
+        end
+    }
+    vim.lsp.enable 'ts_ls'
     vim.lsp.config['svelte'] = {
         capabilities = capabilities,
     }
     vim.lsp.enable 'svelte'
+    vim.lsp.config["tinymist"] = {
+        settings = {
+            formatterMode = "typstyle",
+            exportPdf = "onType",
+            semanticTokens = "disable"
+        }
+    }
+    vim.lsp.enable 'tinymist'
+    vim.lsp.config["basedpyright"] = {
+      capabilities = capabilities, settings = {
+        basedpyright = {
+          typeCheckingMode = "standard",
+        },
+      },
+    }
+    vim.lsp.enable 'basedpyright'
 end
 
 setup_cmp()
