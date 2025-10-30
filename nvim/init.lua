@@ -15,10 +15,12 @@ vim.pack.add {
     { src = "https://github.com/nvim-treesitter/nvim-treesitter", branch = "master" },
     "https://github.com/nvim-lualine/lualine.nvim",
     "https://github.com/nvim-tree/nvim-web-devicons",
-    "https://github.com/chomosuke/typst-preview.nvim"
+    "https://github.com/chomosuke/typst-preview.nvim",
+    "https://github.com/mason-org/mason-lspconfig.nvim"
 }
 
 require("mason").setup()
+require("mason-lspconfig").setup()
 require("oil").setup()
 -- require("mini.pick").setup()
 require("lspkind").init {}
@@ -328,11 +330,9 @@ function setup_cmp()
             }
         }
     }
-    vim.lsp.enable 'lua_ls'
     vim.lsp.config['clangd'] = {
         capabilities = capabilities
     }
-    vim.lsp.enable 'clangd'
     vim.lsp.config['denols'] = {
         capabilities = capabilities,
         on_attach = function(client, bufnr)
@@ -342,30 +342,17 @@ function setup_cmp()
             end
         end
     }
-    vim.lsp.enable 'denols'
-    vim.lsp.config['ts_ls'] = {
-        capabilities = capabilities,
-        single_file_support = false,
-        on_attach = function(client, bufnr)
-            if lspconfig.util.root_pattern("deno.json", "deno.jsonc")(vim.fn.getcwd()) then
-                client:stop()
-                return
-            end
-        end
-    }
-    vim.lsp.enable 'ts_ls'
+    -- vim.lsp.enable 'denols'
+
     vim.lsp.config['svelte'] = {
         capabilities = capabilities,
     }
-    vim.lsp.enable 'svelte'
     vim.lsp.config["tinymist"] = {
         settings = {
             formatterMode = "typstyle",
             exportPdf = "onType",
-            semanticTokens = "disable"
         }
     }
-    vim.lsp.enable 'tinymist'
     vim.lsp.config["basedpyright"] = {
       capabilities = capabilities, settings = {
         basedpyright = {
@@ -373,7 +360,7 @@ function setup_cmp()
         },
       },
     }
-    vim.lsp.enable 'basedpyright'
+    vim.lsp.enable { 'lua_ls', 'ts_ls', 'svelte', 'tinymist', 'clangd' }
 end
 
 setup_cmp()
