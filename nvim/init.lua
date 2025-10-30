@@ -92,8 +92,6 @@ lualine.setup {
     extensions = { "oil" }
 }
 
-require("gamma")
-
 vim.o.termguicolors = true
 vim.wo.relativenumber = true
 vim.wo.number = true
@@ -181,6 +179,10 @@ vim.keymap.set("n", "<leader>d", function()
         border = "rounded", -- optional rounded border
     })
 end, { desc = "Show diagnostic" })
+
+local rp = require("rp")
+vim.keymap.set("n", "<leader>q", function () rp.snippet_picker() end, { desc = "Paste RP Snippet" })
+
 
 --- @param str string
 local function type(str)
