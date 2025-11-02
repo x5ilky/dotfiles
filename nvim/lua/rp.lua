@@ -19,6 +19,7 @@ local snippets = {
     { name = "Template: Test Case Problem", file = "template-test-case.cpp" },
     { name = "Variables: BFS", file = "variables-bfs.cpp" },
     { name = "Variables: Sorted Stack", file = "variables-sorted-stack.cpp" },
+    { name = "Template: LCA", file = "lca.cpp" },
 }
 
 local function snippet_picker(opts)
