@@ -1,4 +1,3 @@
-
 vim.pack.add {
     { src = 'https://github.com/neovim/nvim-lspconfig' },
     { src = "https://github.com/mason-org/mason.nvim", },
@@ -225,17 +224,6 @@ end, { desc = "Copy string to clipboard" })
 local function type(str)
     return "a" .. str:gsub("\n", "<CR>")
 end
-vim.keymap.set("n", "gct", type([[
-#include <bits/stdc++.h>
-
-using namespace std;
-
-signed main() {
-
-
-    return 0;
-}
-]]))
 
 function add_whichkey_groups()
     local wk = require "which-key"
