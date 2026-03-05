@@ -1,3 +1,4 @@
+
 vim.pack.add {
     { src = 'https://github.com/neovim/nvim-lspconfig' },
     { src = "https://github.com/mason-org/mason.nvim", },
@@ -16,7 +17,8 @@ vim.pack.add {
     "https://github.com/nvim-lualine/lualine.nvim",
     "https://github.com/nvim-tree/nvim-web-devicons",
     "https://github.com/chomosuke/typst-preview.nvim",
-    "https://github.com/mason-org/mason-lspconfig.nvim"
+    "https://github.com/mason-org/mason-lspconfig.nvim",
+    "https://github.com/luckasRanarison/tailwind-tools.nvim"
 }
 
 require("mason").setup()
@@ -38,6 +40,14 @@ require 'nvim-treesitter.configs'.setup {
     ignore_install = {},
     modules = {}
 }
+require("tailwind-tools").setup {
+    extension = {
+        patterns = {
+            rust = { "class=[\"']([^\"']+)[\"']" },
+        }
+    }
+}
+
 local in_command = false
 local IC = function()
     return not in_command
@@ -110,12 +120,33 @@ vim.cmd [[colorscheme vague]]
 local in_wsl = os.getenv('WSL_DISTRO_NAME') ~= nil
 
 if in_wsl then
-    vim.g.clipboard = {
-        name = 'wsl clipboard',
-        copy = { ["+"] = { "clip.exe" }, ["*"] = { "clip.exe" } },
-        paste = { ["+"] = 'powershell.exe -c [Console]::Out.Write($(Get-Clipboard -Raw).tostring().replace("`r", ""))', ["*"] = 'powershell.exe -c [Console]::Out.Write($(Get-Clipboard -Raw).tostring().replace("`r", ""))' },
-        cache_enabled = true
-    }
+  local copy_cmd = [[
+    $ErrorActionPreference="Stop"
+    [Console]::InputEncoding  = [System.Text.UTF8Encoding]::new($false)
+    [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+    $text = [Console]::In.ReadToEnd()
+    Set-Clipboard -Value $text
+  ]]
+
+  local paste_cmd = [[
+    $ErrorActionPreference="Stop"
+    [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+    $t = Get-Clipboard -Raw
+    if ($null -ne $t) { [Console]::Out.Write(($t -replace "`r","")) }
+  ]]
+
+  vim.g.clipboard = {
+    name = "wsl clipboard (utf8)",
+    copy = {
+      ["+"] = { "powershell.exe", "-NoProfile", "-Command", copy_cmd },
+      ["*"] = { "powershell.exe", "-NoProfile", "-Command", copy_cmd },
+    },
+    paste = {
+      ["+"] = { "powershell.exe", "-NoProfile", "-Command", paste_cmd },
+      ["*"] = { "powershell.exe", "-NoProfile", "-Command", paste_cmd },
+    },
+    cache_enabled = false,
+  }
 end
 
 
@@ -179,10 +210,16 @@ vim.keymap.set("n", "<leader>d", function()
         border = "rounded", -- optional rounded border
     })
 end, { desc = "Show diagnostic" })
+vim.keymap.set("n", "<leader>q", function()
+  local s = [[/*
+    そう言って、 一度目をつむったプリシラが、
 
-local rp = require("rp")
-vim.keymap.set("n", "<leader>q", function () rp.snippet_picker() end, { desc = "Paste RP Snippet" })
+    その紅の双眸にスバルを映した。 そして――、 
 
+    「――大儀であった。そなたは、真の騎士である」
+*/]]
+  vim.fn.setreg("+", s)
+end, { desc = "Copy string to clipboard" })
 
 --- @param str string
 local function type(str)
@@ -362,7 +399,7 @@ function setup_cmp()
         },
       },
     }
-    vim.lsp.enable { 'lua_ls', 'ts_ls', 'svelte', 'tinymist', 'clangd' }
+    vim.lsp.enable { 'lua_ls', 'ts_ls', 'svelte', 'tinymist', 'clangd', 'rust_analyzer', 'pyrefly', 'ols' }
 end
 
 setup_cmp()
