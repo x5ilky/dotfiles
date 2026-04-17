@@ -39,13 +39,13 @@ require 'nvim-treesitter.configs'.setup {
     ignore_install = {},
     modules = {}
 }
-require("tailwind-tools").setup {
-    extension = {
-        patterns = {
-            rust = { "class=[\"']([^\"']+)[\"']" },
-        }
-    }
-}
+-- require("tailwind-tools").setup {
+--     extension = {
+--         patterns = {
+--             rust = { "class=[\"']([^\"']+)[\"']" },
+--         }
+--     }
+-- }
 
 local in_command = false
 local IC = function()
@@ -344,7 +344,7 @@ function setup_cmp()
         },
     })
     local capabilities = require('cmp_nvim_lsp').default_capabilities()
-    local lspconfig = require 'lspconfig'
+    local lspconfig = vim.lsp.config
     vim.lsp.config['lua_ls'] = {
         capabilities = capabilities,
         settings = {
