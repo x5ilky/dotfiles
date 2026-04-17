@@ -218,6 +218,8 @@ vim.keymap.set("n", "<leader>q", function()
     「――大儀であった。そなたは、真の騎士である」
 */]]
   vim.fn.setreg("+", s)
+  vim.fn.setreg("\"", s)
+  
 end, { desc = "Copy string to clipboard" })
 
 --- @param str string
@@ -391,3 +393,100 @@ function setup_cmp()
 end
 
 setup_cmp()
+
+-- Greek auto-replace in C++ buffers only
+-- Examples:
+--   \aa -> α
+--   \AA -> Α
+--   \gg -> γ
+--   \GG -> Γ
+
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "cpp",
+  callback = function(args)
+    local rules = {
+      ["\\aa"] = "α",
+      ["\\bb"] = "β",
+      ["\\gg"] = "γ",
+      ["\\dd"] = "δ",
+      ["\\ee"] = "ε",
+      ["\\zz"] = "ζ",
+      ["\\hh"] = "η",
+      ["\\qq"] = "θ",
+      ["\\ii"] = "ι",
+      ["\\kk"] = "κ",
+      ["\\ll"] = "λ",
+      ["\\mm"] = "μ",
+      ["\\nn"] = "ν",
+      ["\\xx"] = "ξ",
+      ["\\pp"] = "π",
+      ["\\rr"] = "ρ",
+      ["\\ss"] = "σ",
+      ["\\tt"] = "τ",
+      ["\\uu"] = "υ",
+      ["\\ff"] = "φ",
+      ["\\cc"] = "χ",
+      ["\\yy"] = "ψ",
+      ["\\ww"] = "ω",
+
+      ["\\AA"] = "Α",
+      ["\\BB"] = "Β",
+      ["\\GG"] = "Γ",
+      ["\\DD"] = "Δ",
+      ["\\EE"] = "Ε",
+      ["\\ZZ"] = "Ζ",
+      ["\\HH"] = "Η",
+      ["\\QQ"] = "Θ",
+      ["\\II"] = "Ι",
+      ["\\KK"] = "Κ",
+      ["\\LL"] = "Λ",
+      ["\\MM"] = "Μ",
+      ["\\NN"] = "Ν",
+      ["\\XX"] = "Ξ",
+      ["\\PP"] = "Π",
+      ["\\RR"] = "Ρ",
+      ["\\SS"] = "Σ",
+      ["\\TT"] = "Τ",
+      ["\\UU"] = "Υ",
+      ["\\FF"] = "Φ",
+      ["\\CC"] = "Χ",
+      ["\\YY"] = "Ψ",
+      ["\\WW"] = "Ω",
+
+      ["\\inf"] = "∞",
+    }
+
+    local max_len = 0
+    for lhs, _ in pairs(rules) do
+      max_len = math.max(max_len, #lhs)
+    end
+
+    local function try_expand(key)
+      local _, col = unpack(vim.api.nvim_win_get_cursor(0))
+      local line = vim.api.nvim_get_current_line()
+      local before = line:sub(1, col)
+      local text = before .. key
+
+      for len = math.min(max_len, #text), 1, -1 do
+        local suffix = text:sub(-len)
+        local replacement = rules[suffix]
+        if replacement then
+          return string.rep("<BS>", len - 1) .. replacement
+        end
+      end
+
+      return key
+    end
+
+    for c in ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"):gmatch(".") do
+      vim.keymap.set("i", c, function()
+        return try_expand(c)
+      end, {
+        expr = true,
+        buffer = args.buf,
+        silent = true,
+        replace_keycodes = true,
+      })
+    end
+  end,
+})
