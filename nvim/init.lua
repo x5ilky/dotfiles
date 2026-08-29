@@ -12,7 +12,7 @@ vim.pack.add {
     "https://github.com/folke/which-key.nvim",
     "https://github.com/nvim-lua/plenary.nvim",
     "https://github.com/nvim-telescope/telescope.nvim",
-    { src = "https://github.com/nvim-treesitter/nvim-treesitter", branch = "master" },
+    { src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "main" },
     "https://github.com/nvim-lualine/lualine.nvim",
     "https://github.com/nvim-tree/nvim-web-devicons",
     "https://github.com/chomosuke/typst-preview.nvim",
@@ -22,23 +22,28 @@ vim.pack.add {
 
 require("mason").setup()
 require("mason-lspconfig").setup()
-require("oil").setup()
+require("oil").setup({
+    view_options = {
+        show_hidden = true
+    },
+    preview_win = {
+        -- Whether the preview window is automatically updated when the cursor is moved
+        update_on_cursor_moved = true,
+        -- How to open the preview window "load"|"scratch"|"fast_scratch"
+        preview_method = "fast_scratch",
+        win_options = {
+        }
+    },
+    float = {
+        preview_split = "right"
+    }
+})
 -- require("mini.pick").setup()
 require("lspkind").init {}
 require "lsp_signature".setup {
     floating_window_above_cur_line = true
 }
 require 'typst-preview'.setup {}
-require 'nvim-treesitter.configs'.setup {
-    ensure_installed = {  },
-    sync_install = false,
-    auto_install = false,
-    highlight = {
-        enable = true,
-    },
-    ignore_install = {},
-    modules = {}
-}
 -- require("tailwind-tools").setup {
 --     extension = {
 --         patterns = {
@@ -119,7 +124,7 @@ vim.cmd [[colorscheme vague]]
 local in_wsl = os.getenv('WSL_DISTRO_NAME') ~= nil
 
 if in_wsl then
-  local copy_cmd = [[
+    local copy_cmd = [[
     $ErrorActionPreference="Stop"
     [Console]::InputEncoding  = [System.Text.UTF8Encoding]::new($false)
     [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
@@ -127,68 +132,57 @@ if in_wsl then
     Set-Clipboard -Value $text
   ]]
 
-  local paste_cmd = [[
+    local paste_cmd = [[
     $ErrorActionPreference="Stop"
     [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
     $t = Get-Clipboard -Raw
     if ($null -ne $t) { [Console]::Out.Write(($t -replace "`r","")) }
   ]]
 
-  vim.g.clipboard = {
-    name = "wsl clipboard (utf8)",
-    copy = {
-      ["+"] = { "powershell.exe", "-NoProfile", "-Command", copy_cmd },
-      ["*"] = { "powershell.exe", "-NoProfile", "-Command", copy_cmd },
-    },
-    paste = {
-      ["+"] = { "powershell.exe", "-NoProfile", "-Command", paste_cmd },
-      ["*"] = { "powershell.exe", "-NoProfile", "-Command", paste_cmd },
-    },
-    cache_enabled = false,
-  }
+    vim.g.clipboard = {
+        name = "wsl clipboard (utf8)",
+        copy = {
+            ["+"] = { "powershell.exe", "-NoProfile", "-Command", copy_cmd },
+            ["*"] = { "powershell.exe", "-NoProfile", "-Command", copy_cmd },
+        },
+        paste = {
+            ["+"] = { "powershell.exe", "-NoProfile", "-Command", paste_cmd },
+            ["*"] = { "powershell.exe", "-NoProfile", "-Command", paste_cmd },
+        },
+        cache_enabled = false,
+    }
 end
 
-
-local function file_makerun()
-    local ft = vim.bo.filetype
-    local filename = vim.fn.expand("%:t")
-    local dir = vim.fn.expand("%:p:h")
-    if ft == "cpp" then
-        vim.cmd(string.format("vnew | terminal cd \"%s\" && g++ -Wall -Wextra -o %s.sto %s && ./%s.sto", dir, filename,
-            filename, filename))
-        vim.cmd "wincmd l"
-        vim.cmd "wincmd h"
-    end
-end
-local function file_clear()
-    local ft = vim.bo.filetype
-    local dir = vim.fn.expand("%:p:h")
-    if ft == "cpp" then
-        vim.cmd(string.format("vnew | terminal cd %s && rm -fv *.sto", dir))
-        vim.cmd "wincmd l"
-        vim.cmd "wincmd h"
-    end
-end
-local function file_maketerminal()
-    local dir = vim.fn.expand("%:p:h")
-    vim.cmd(string.format("vnew | terminal cd %s && zsh", dir))
-    vim.cmd "wincmd r"
-    vim.cmd "wincmd l"
-    vim.cmd "vertical resize 60"
-end
 
 vim.keymap.set({ "n", "v" }, "<leader>o", ":update<CR> :source<CR>", { desc = "Resource Config" })
 vim.keymap.set({ "n", "v" }, "<leader>e", ":Oil<CR>", { desc = "Open explorer" })
 vim.keymap.set({ "n", "v" }, "<leader>y", '\"+y', { desc = "Yank from clipboard" })
 vim.keymap.set({ "n", "v" }, "<leader>p", '\"+p', { desc = "Paste from clipboard" })
 vim.keymap.set({ "n", "v" }, "<leader>lf", vim.lsp.buf.format, { desc = "Format file" })
-vim.keymap.set({ "n", "v" }, "<leader>mt", file_maketerminal, { desc = "Make terminal" })
-vim.keymap.set({ "n", "v" }, "<leader>mr", file_makerun, { desc = "Run current file" })
-vim.keymap.set({ "n", "v" }, "<leader>mc", file_clear, { desc = "Clear temporary executable files" })
 
 
 local tb = require "telescope.builtin"
-vim.keymap.set("n", "<leader>ff", tb.find_files, { desc = "Find files" })
+local function project_files()
+    vim.system(
+        { "git", "rev-parse", "--is-inside-work-tree" },
+        { text = true },
+        function(result)
+            vim.schedule(function()
+                if result.code == 0 then
+                    tb.git_files({
+                        show_untracked = true,
+                    })
+                else
+                    tb.find_files()
+                end
+            end)
+        end
+    )
+end
+
+vim.keymap.set("n", "<leader>ff", project_files, {
+    desc = "Find files",
+})
 vim.keymap.set("n", "<leader>fg", tb.live_grep, { desc = "Live grep" })
 vim.keymap.set("n", "<leader>fb", tb.buffers, { desc = "Change buffer" })
 vim.keymap.set("n", "<leader>fh", tb.help_tags, { desc = "Help tags" })
@@ -209,18 +203,6 @@ vim.keymap.set("n", "<leader>d", function()
         border = "rounded", -- optional rounded border
     })
 end, { desc = "Show diagnostic" })
-vim.keymap.set("n", "<leader>q", function()
-  local s = [[/*
-    そう言って、 一度目をつむったプリシラが、
-
-    その紅の双眸にスバルを映した。 そして――、 
-
-    「――大儀であった。そなたは、真の騎士である」
-*/]]
-  vim.fn.setreg("+", s)
-  vim.fn.setreg("\"", s)
-  
-end, { desc = "Copy string to clipboard" })
 
 --- @param str string
 local function type(str)
@@ -362,15 +344,15 @@ function setup_cmp()
     vim.lsp.config['clangd'] = {
         capabilities = capabilities
     }
-    vim.lsp.config['denols'] = {
-        capabilities = capabilities,
-        on_attach = function(client, bufnr)
-            if not lspconfig.util.root_pattern("deno.json", "deno.jsonc")(vim.fn.getcwd()) then
-                client:stop()
-                return
-            end
-        end
-    }
+    -- vim.lsp.config['denols'] = {
+    --     capabilities = capabilities,
+    --     on_attach = function(client, bufnr)
+    --         if not lspconfig.util.root_pattern("deno.json", "deno.jsonc")(vim.fn.getcwd()) then
+    --             client:stop()
+    --             return
+    --         end
+    --     end
+    -- }
     -- vim.lsp.enable 'denols'
 
     vim.lsp.config['svelte'] = {
@@ -383,11 +365,12 @@ function setup_cmp()
         }
     }
     vim.lsp.config["basedpyright"] = {
-      capabilities = capabilities, settings = {
-        basedpyright = {
-          typeCheckingMode = "standard",
+        capabilities = capabilities,
+        settings = {
+            basedpyright = {
+                typeCheckingMode = "standard",
+            },
         },
-      },
     }
     vim.lsp.enable { 'lua_ls', 'ts_ls', 'svelte', 'tinymist', 'clangd', 'rust_analyzer', 'pyrefly', 'ols' }
 end
@@ -402,91 +385,91 @@ setup_cmp()
 --   \GG -> Γ
 
 vim.api.nvim_create_autocmd("FileType", {
-  pattern = "cpp",
-  callback = function(args)
-    local rules = {
-      ["\\aa"] = "α",
-      ["\\bb"] = "β",
-      ["\\gg"] = "γ",
-      ["\\dd"] = "δ",
-      ["\\ee"] = "ε",
-      ["\\zz"] = "ζ",
-      ["\\hh"] = "η",
-      ["\\qq"] = "θ",
-      ["\\ii"] = "ι",
-      ["\\kk"] = "κ",
-      ["\\ll"] = "λ",
-      ["\\mm"] = "μ",
-      ["\\nn"] = "ν",
-      ["\\xx"] = "ξ",
-      ["\\pp"] = "π",
-      ["\\rr"] = "ρ",
-      ["\\ss"] = "σ",
-      ["\\tt"] = "τ",
-      ["\\uu"] = "υ",
-      ["\\ff"] = "φ",
-      ["\\cc"] = "χ",
-      ["\\yy"] = "ψ",
-      ["\\ww"] = "ω",
+    pattern = "cpp",
+    callback = function(args)
+        local rules = {
+            ["\\aa"] = "α",
+            ["\\bb"] = "β",
+            ["\\gg"] = "γ",
+            ["\\dd"] = "δ",
+            ["\\ee"] = "ε",
+            ["\\zz"] = "ζ",
+            ["\\hh"] = "η",
+            ["\\qq"] = "θ",
+            ["\\ii"] = "ι",
+            ["\\kk"] = "κ",
+            ["\\ll"] = "λ",
+            ["\\mm"] = "μ",
+            ["\\nn"] = "ν",
+            ["\\xx"] = "ξ",
+            ["\\pp"] = "π",
+            ["\\rr"] = "ρ",
+            ["\\ss"] = "σ",
+            ["\\tt"] = "τ",
+            ["\\uu"] = "υ",
+            ["\\ff"] = "φ",
+            ["\\cc"] = "χ",
+            ["\\yy"] = "ψ",
+            ["\\ww"] = "ω",
 
-      ["\\AA"] = "Α",
-      ["\\BB"] = "Β",
-      ["\\GG"] = "Γ",
-      ["\\DD"] = "Δ",
-      ["\\EE"] = "Ε",
-      ["\\ZZ"] = "Ζ",
-      ["\\HH"] = "Η",
-      ["\\QQ"] = "Θ",
-      ["\\II"] = "Ι",
-      ["\\KK"] = "Κ",
-      ["\\LL"] = "Λ",
-      ["\\MM"] = "Μ",
-      ["\\NN"] = "Ν",
-      ["\\XX"] = "Ξ",
-      ["\\PP"] = "Π",
-      ["\\RR"] = "Ρ",
-      ["\\SS"] = "Σ",
-      ["\\TT"] = "Τ",
-      ["\\UU"] = "Υ",
-      ["\\FF"] = "Φ",
-      ["\\CC"] = "Χ",
-      ["\\YY"] = "Ψ",
-      ["\\WW"] = "Ω",
+            ["\\AA"] = "Α",
+            ["\\BB"] = "Β",
+            ["\\GG"] = "Γ",
+            ["\\DD"] = "Δ",
+            ["\\EE"] = "Ε",
+            ["\\ZZ"] = "Ζ",
+            ["\\HH"] = "Η",
+            ["\\QQ"] = "Θ",
+            ["\\II"] = "Ι",
+            ["\\KK"] = "Κ",
+            ["\\LL"] = "Λ",
+            ["\\MM"] = "Μ",
+            ["\\NN"] = "Ν",
+            ["\\XX"] = "Ξ",
+            ["\\PP"] = "Π",
+            ["\\RR"] = "Ρ",
+            ["\\SS"] = "Σ",
+            ["\\TT"] = "Τ",
+            ["\\UU"] = "Υ",
+            ["\\FF"] = "Φ",
+            ["\\CC"] = "Χ",
+            ["\\YY"] = "Ψ",
+            ["\\WW"] = "Ω",
 
-      ["\\inf"] = "∞",
-    }
+            ["\\inf"] = "∞",
+        }
 
-    local max_len = 0
-    for lhs, _ in pairs(rules) do
-      max_len = math.max(max_len, #lhs)
-    end
-
-    local function try_expand(key)
-      local _, col = unpack(vim.api.nvim_win_get_cursor(0))
-      local line = vim.api.nvim_get_current_line()
-      local before = line:sub(1, col)
-      local text = before .. key
-
-      for len = math.min(max_len, #text), 1, -1 do
-        local suffix = text:sub(-len)
-        local replacement = rules[suffix]
-        if replacement then
-          return string.rep("<BS>", len - 1) .. replacement
+        local max_len = 0
+        for lhs, _ in pairs(rules) do
+            max_len = math.max(max_len, #lhs)
         end
-      end
 
-      return key
-    end
+        local function try_expand(key)
+            local _, col = unpack(vim.api.nvim_win_get_cursor(0))
+            local line = vim.api.nvim_get_current_line()
+            local before = line:sub(1, col)
+            local text = before .. key
 
-    for c in ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"):gmatch(".") do
-      vim.keymap.set("i", c, function()
-        return try_expand(c)
-      end, {
-        expr = true,
-        buffer = args.buf,
-        silent = true,
-        replace_keycodes = true,
-      })
-    end
-  end,
+            for len = math.min(max_len, #text), 1, -1 do
+                local suffix = text:sub(-len)
+                local replacement = rules[suffix]
+                if replacement then
+                    return string.rep("<BS>", len - 1) .. replacement
+                end
+            end
+
+            return key
+        end
+
+        for c in ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"):gmatch(".") do
+            vim.keymap.set("i", c, function()
+                return try_expand(c)
+            end, {
+                expr = true,
+                buffer = args.buf,
+                silent = true,
+                replace_keycodes = true,
+            })
+        end
+    end,
 })
